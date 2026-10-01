@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>NEO-BLOCKS | Desafio Arcade de Blocos</title>
+  <meta name="description" content="Um jogo arcade futurista de blocos que caem com iluminação neon, física precisa, progressão de velocidade e controles responsivos.">
+  
+  <!-- Fontes Google -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="arcade-background">
+    <div class="grid-glow-effect"></div>
+  </div>
+
+  <div class="app-container">
+    <!-- Cabeçalho -->
+    <header class="game-header">
+      <div class="logo-area">
+        <div class="logo-glow-icon"></div>
+        <h1 class="game-title">NEO<span>BLOCKS</span></h1>
+        <div class="arcade-badge">ARCADE EDITION</div>
+      </div>
+      <div class="header-controls">
+        <button id="btn-sound-toggle" class="icon-btn" title="Ativar/Desativar Som" aria-label="Alternar Som">
+          <span id="sound-icon" class="btn-icon">🔊</span>
+          <span class="btn-text">SOM</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Layout Principal -->
+    <main class="game-workspace">
+      <!-- Painel Lateral Esquerdo: Estatísticas -->
+      <aside class="panel stats-panel">
+        <div class="card stat-card highscore-card">
+          <div class="card-label">RECORDE</div>
+          <div class="card-value" id="val-highscore">0</div>
+        </div>
+
+        <div class="card stat-card">
+          <div class="card-label">PONTUAÇÃO</div>
+          <div class="card-value" id="val-score">0</div>
+        </div>
+
+        <div class="card stat-card">
+          <div class="card-label">TEMPO DE PARTIDA</div>
+          <div class="card-value timer-value" id="val-time">00:00</div>
+        </div>
+
+        <div class="card stat-card level-card">
+          <div class="card-label">NÍVEL ATUAL</div>
+          <div class="card-value level-value" id="val-level">1</div>
+          <div class="level-progress-bar">
+            <div id="level-progress-fill" class="progress-fill"></div>
+          </div>
+        </div>
+
+        <div class="card stat-card speed-card">
+          <div class="card-label">VELOCIDADE</div>
+          <div class="card-value speed-value" id="val-speed">1.0x</div>
+        </div>
+      </aside>
+
+      <!-- Centro: Tabuleiro do Jogo -->
+      <section class="board-wrapper">
+        <div class="canvas-container" id="canvas-container">
+          <canvas id="game-canvas" width="300" height="600"></canvas>
+          
+          <!-- Efeito de Notificação de Nível / Tetris -->
+          <div id="floating-banner" class="floating-banner hidden"></div>
+
+          <!-- Overlay Inicial -->
+          <div id="overlay-start" class="game-overlay">
+            <div class="overlay-box">
+              <div class="cyber-chip">SISTEMA PRONTO</div>
+              <h2 class="overlay-title">NEO BLOCKS</h2>
+              <p class="overlay-desc">Encaixe os blocos, elimine linhas e sobreviva à aceleração contínua do tempo!</p>
+              <button id="btn-start-overlay" class="primary-btn glow-btn pulse-anim">INICIAR PARTIDA</button>
+              <div class="quick-keys-hint">Ou pressione <span>ESPAÇO</span> para começar</div>
+            </div>
+          </div>
+
+          <!-- Overlay de Pausa -->
+          <div id="overlay-pause" class="game-overlay hidden">
+            <div class="overlay-box">
+              <div class="pause-badge">MODO ESPERA</div>
+              <h2 class="overlay-title">PAUSADO</h2>
+              <p class="overlay-desc">O cronômetro e a queda estão congelados.</p>
+              <button id="btn-resume-overlay" class="primary-btn glow-btn">CONTINUAR</button>
+            </div>
+          </div>
+
+          <!-- Overlay de Game Over -->
+          <div id="overlay-gameover" class="game-overlay hidden">
+            <div class="overlay-box gameover-box">
+              <div class="danger-badge">FIM DE JOGO</div>
+              <h2 class="overlay-title gameover-text">GAME OVER</h2>
+              
+              <div class="gameover-stats">
+                <div class="go-row">
+                  <span class="go-label">TEMPO SOBREVIVIDO:</span>
+                  <span class="go-val" id="go-time">00:00</span>
+                </div>
+                <div class="go-row">
+                  <span class="go-label">PONTUAÇÃO:</span>
+                  <span class="go-val" id="go-score">0</span>
+                </div>
+                <div class="go-row">
+                  <span class="go-label">NÍVEL ALCANÇADO:</span>
+                  <span class="go-val" id="go-level">1</span>
+                </div>
+                <div class="go-row">
+                  <span class="go-label">LINHAS ELIMINADAS:</span>
+                  <span class="go-val" id="go-lines">0</span>
+                </div>
+              </div>
+
+              <div id="new-record-alert" class="new-record-banner hidden">NOVO RECORDE REGISTRADO!</div>
+
+              <button id="btn-restart-overlay" class="primary-btn glow-btn pulse-anim">JOGAR NOVAMENTE</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Painel Lateral Direito: Próxima Peça & Ações -->
+      <aside class="panel actions-panel">
+        <div class="card preview-card">
+          <div class="card-label">PRÓXIMA PEÇA</div>
+          <div class="preview-canvas-box">
+            <canvas id="preview-canvas" width="120" height="120"></canvas>
+          </div>
+        </div>
+
+        <div class="card stat-card lines-card">
+          <div class="card-label">LINHAS TOTAIS</div>
+          <div class="card-value" id="val-lines">0</div>
+        </div>
+
+        <!-- Botões de Ação do Jogo -->
+        <div class="action-buttons-group">
+          <button id="btn-start" class="menu-btn btn-iniciar">
+            <span class="btn-icon">▶</span>
+            <span>INICIAR</span>
+          </button>
+          <button id="btn-pause" class="menu-btn btn-pausar" disabled>
+            <span class="btn-icon">⏸</span>
+            <span id="pause-btn-text">PAUSAR</span>
+          </button>
+          <button id="btn-restart" class="menu-btn btn-reiniciar">
+            <span class="btn-icon">🔄</span>
+            <span>REINICIAR</span>
+          </button>
+        </div>
+
+        <!-- Guia Rápido de Teclas no Desktop -->
+        <div class="card keyboard-guide-card">
+          <div class="card-label">COMANDOS TECLADO</div>
+          <ul class="keyboard-list">
+            <li><kbd>←</kbd> <kbd>→</kbd> Mover lateral</li>
+            <li><kbd>↑</kbd> ou <kbd>W</kbd> Rotacionar</li>
+            <li><kbd>↓</kbd> ou <kbd>S</kbd> Acelerar queda</li>
+            <li><kbd>Espaço</kbd> Queda instantânea</li>
+            <li><kbd>P</kbd> ou <kbd>Esc</kbd> Pausar / Continuar</li>
+          </ul>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Controles Virtuais Touch para Mobile / Tablet -->
+    <footer class="touch-controls-section" id="touch-controls">
+      <div class="touch-controls-grid">
+        <button id="ctrl-left" class="touch-btn" aria-label="Esquerda" data-action="left">
+          <span>◀</span>
+        </button>
+        <button id="ctrl-down" class="touch-btn" aria-label="Descer Rápido" data-action="down">
+          <span>▼</span>
+        </button>
+        <button id="ctrl-right" class="touch-btn" aria-label="Direita" data-action="right">
+          <span>▶</span>
+        </button>
+        <button id="ctrl-rotate" class="touch-btn touch-btn-primary" aria-label="Rotacionar" data-action="rotate">
+          <span>↻</span>
+          <small>GIRAR</small>
+        </button>
+        <button id="ctrl-drop" class="touch-btn touch-btn-accent" aria-label="Queda Instantânea" data-action="hardDrop">
+          <span>⚡</span>
+          <small>DROP</small>
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
